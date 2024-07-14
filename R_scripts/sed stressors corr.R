@@ -7,13 +7,13 @@
 
 #Data improt
 #setwd("C:/Users/g_ric/OneDrive/1 Work/4 Writing/1 Ricardo et al  - Modelling multiple ELHS sed scenario/field-work")
-data1 <- read.table(file="sed stressors corr.txt", header= TRUE,dec=",", na.strings=c("", "na"), fill = TRUE) 
+data1 <- read.table(file="./data/sed stressors corr.txt", header= TRUE,dec=",", na.strings=c("", "na"), fill = TRUE) 
 head(data1)
 
 # 2 Labelling and wrangling -----------------------------------------------
 data1$date.time <- as.numeric(as.character(data1$date.time))
 data1$ntu <- as.numeric(as.character(data1$ntu))
-#data1$max.spectra <- as.numeric(as.character(data1$max.spectra))  #okay this doesn't work, need to get acutal column value
+data1$max.spectra <- as.numeric(as.character(data1$max.spectra))  #okay this doesn't work, need to get acutal column value
 data1$sum.irr <- as.numeric(as.character(data1$sum.irr))
 str(data1)
 #plot(data1$date.time, data1$ntu)
