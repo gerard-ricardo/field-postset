@@ -10,30 +10,39 @@ library(jpeg)
 library(png)
 source("https://raw.githubusercontent.com/gerard-ricardo/data/master/theme_sleek2") # set theme in code
 
-# Import light data -----------------------------------------------------------
+# Import light  and ntu data -----------------------------------------------------------
+
+## 2017
 # Import Irradiance
-# Data imprt 2018
+# irrad1_a <- read.table("./data/2017_light_deep_flor.txt", sep = "\t", header = TRUE, comment.char = "", check.names = FALSE, quote = "", na.strings = c("NA", "NaN", " "))
+# head(irrad1_a)
+# weird = which(irrad1_a == '#VALUE!')
+# irrad1_a = irrad1_a[-which(irrad1_a == '#VALUE!'),]
+# irrad1_a <- dplyr::filter(irrad1_a, date.time > 43090 & date.time < 43120)
+# 
+# #2017 ntu data
+# data2 <- read.table("./data/2017_ntu_flor.txt", sep = "\t", header = TRUE, comment.char = "", check.names = FALSE, quote = "", na.strings = c("NA", "NaN", " "))
+# data2 <- data2[complete.cases(data2), ]
+# data2 <- dplyr::filter(data2, date.time > 43090 & date.time < 43120) %>% rename(ntu = NTU)
+
+
+## 2018
 irrad1_a <- read.table("./data/2018_ms8_flor.txt", sep = "\t", header = TRUE, comment.char = "", check.names = FALSE, quote = "", na.strings = c("NA", "NaN", " "))
+irrad1_a <- dplyr::filter(irrad1_a, date.time > 43425 & date.time < 43488)
 
-irrad1_a <- dplyr::filter(irrad1_a, date.time > 43425) # note this is different to main analysis because combining by data.time
-irrad1_a <- dplyr::filter(irrad1_a, date.time < 43488)
-range(irrad1_a$date)
+#2018 ntu flor
+data2 <- read.table("https://raw.githubusercontent.com/gerard-ricardo/data/master/2018%20ntu%20flor", sep = "\t", header = TRUE, comment.char = "", check.names = FALSE, quote = "", na.strings = c("NA", "NaN", " "))
+head(data2)
+data2 <- data2[complete.cases(data2), ]
+str(data2)
+data2 <- filter(data2, date.time > 43425 & date.time < 43488)
 
-# Data prep -----------------------------------------------
-# Data cleaning
-head(irrad1_a)
+
+# Light data prep -----------------------------------------------
 irrad1_a <- irrad1_a[complete.cases(irrad1_a), ]
-str(irrad1_a)
-range(irrad1_a$time)
-hist(irrad1_a$time)
 irrad1_a[] <- lapply(irrad1_a, function(x) as.numeric(as.character(x))) # convert all to numeric
 irrad1_a$date <- as.factor(irrad1_a$date)
-str(irrad1_a)
 irrad1_a <- irrad1_a[complete.cases(irrad1_a), ] %>% data.frame()
-range(irrad1_a$X425nm)
-
-# plot
-head(irrad1_a)
 options(scipen = 999) # display x no of digits
 # p1 = ggplot() + geom_point(data = irrad1_a, aes(x = date.time, y = X425nm, color = 'mean'))
 # irrad1_a = filter(irrad1_a, date.time > 43422) #trim away error at start. First real reading but not deployment
@@ -74,17 +83,8 @@ head(df_simp_a)
 con.fac <- 11973.78
 df_par_a <- (data.frame(irrad1_a$X425nm * 425, irrad1_a$X455nm * 455, irrad1_a$X485nm * 485, irrad1_a$X515nm * 515, irrad1_a$X555nm * 555, irrad1_a$X615nm * 615, irrad1_a$X660nm * 660, irrad1_a$X695nm * 695)) / con.fac
 colnames(df_par_a) <- c("425", "455", "485", "515", "555", "615", "660", "695")
-nrow(df_par_a)
-
 # plot(df_par_a$irrad1_a.X555nm...555)
-head(df_par_a)
-range(df_par_a)
 df_par_a <- df_par_a[complete.cases(df_par_a), ]
-range(df_par_a)
-
-str(df_par_a)
-nrow(df_par_a)
-nrow(irrad1_a)
 
 ####
 # Spline/AUC prep
@@ -101,14 +101,14 @@ vecc <- as.numeric(df_par_a[1, ])
 # spl.df = spline(nm, df_simp2[1900,], n = sp.length)
 #
 # #All splines
-# #tot.par3 = vector("numeric", long)  #placeholder
-# tot.par3  = matrix(nrow = long, ncol = sp.length)
+# #tot_par3 = vector("numeric", long)  #placeholder
+# tot_par3  = matrix(nrow = long, ncol = sp.length)
 # for(i in 1:long) {
 #   bob.spline <- spline(nm, df_simp2[i,], n = sp.length)
-#   tot.par3[i,] <- bob.spline$y
+#   tot_par3[i,] <- bob.spline$y
 # }
-# tot.par3   #gives a matrix with each row the spline fits
-# spline.df = tot.par3 %>% data.frame()
+# tot_par3   #gives a matrix with each row the spline fits
+# spline.df = tot_par3 %>% data.frame()
 # str(spline.df)
 # #plot(spline.df$X7)
 # colnames(spline.df) <- names
@@ -120,58 +120,50 @@ vecc <- as.numeric(df_par_a[1, ])
 
 # AUC for PAR -------------------------------------------------------------
 ## single
-
 ff <- auc(nm, df_par_a[1, ], type = "spline")
 auc(nm, vecc, type = "spline")
 
 ## all
-tot.par_a <- vector("numeric", long) # placeholder
+tot_par_a <- vector("numeric", long) # placeholder
 for (i in 1:long) {
   bob <- MESS::auc(nm, df_par_a[i, ], type = "spline", from = 400, to = 700, rule = 2) # changed based on workshop
-  tot.par_a[i] <- bob
+  tot_par_a[i] <- bob
 } # THIS ADDS A CUBLINE SPLINE. Because there are only 8 data points, a cubic (join the dot) spline is best.
-df_par_a$tot.par_a <- tot.par_a # add to main df
+df_par_a$tot_par_a <- tot_par_a # add to main df
 df_par_a$date.time <- irrad1_a$date.time
 df_par_a$time <- irrad1_a$time
 head(df_par_a) # all good to here
-# plot(df_par_a$date.time, df_par_a$tot.par_a)
-quantile(df_par_a$tot.par_a, probs = c(.01, 0.20, 0.5, 0.75, 0.80, .99)) # quartile of tot par inc night
-cum.par.fun <- ecdf(df_par_a$tot.par_a) # P is a function giving the empirical CDF of X
+# plot(df_par_a$date.time, df_par_a$tot_par_a)
+quantile(df_par_a$tot_par_a, probs = c(.01, 0.20, 0.5, 0.75, 0.80, .99)) # quartile of tot par inc night
+cum.par.fun <- ecdf(df_par_a$tot_par_a) # P is a function giving the empirical CDF of X
 cum.par.fun(80)
 
-min(df_par_a$tot.par_a)
-plot(df_par_a$date.time, df_par_a$tot.par_a)
-length(which(df_par_a$tot.par_a > 113)) / nrow(df_par_a)
+min(df_par_a$tot_par_a)
+plot(df_par_a$date.time, df_par_a$tot_par_a)
+length(which(df_par_a$tot_par_a > 113)) / nrow(df_par_a)
 data3 <- df_par_a[which(df_par_a[, 9] < 0), ] # all neg to 0, 16
 df_par_a <- df_par_a %>% anti_join(data3) # subtracts one datafrma efrom another
-df_par_a <- filter(df_par_a, tot.par_a > 1)
+df_par_a <- filter(df_par_a, tot_par_a > 1)
 
-# p0 = ggplot()+geom_point(df_par_a, mapping = aes(x = time, y = tot.par_a, alpha = 0.1 ), col = 'steelblue')+facet_wrap(~date)#+scale_x_log10(name ="dep sed")
+# p0 = ggplot()+geom_point(df_par_a, mapping = aes(x = time, y = tot_par_a, alpha = 0.1 ), col = 'steelblue')+facet_wrap(~date)#+scale_x_log10(name ="dep sed")
 # p0= p0+ scale_y_continuous( limits = c(0, 750))
 # p0
-length(which(df_par_a$tot.par_a > 113)) / nrow(df_par_a) # rougly half of day light hrs are over settlement threshold. Note all negative values removed
+length(which(df_par_a$tot_par_a > 113)) / nrow(df_par_a) # rougly half of day light hrs are over settlement threshold. Note all negative values removed
 nrow(irrad1_a)
 length(unique(irrad1_a$date))
 range(df_par_a$`425`)
-data1.spec <- df_par_a
+data1_spec <- df_par_a
+head(data1_spec)
 
-
-# Import NTU data -----------------------------------------------------------
-# 2018 ntu flor
-
-data2 <- read.table("https://raw.githubusercontent.com/gerard-ricardo/data/master/2018%20ntu%20flor", sep = "\t", header = TRUE, comment.char = "", check.names = FALSE, quote = "", na.strings = c("NA", "NaN", " "))
-head(data2)
-data2 <- data2[complete.cases(data2), ]
-str(data2)
-data2 <- filter(data2, date.time > 43425)
-data2 <- filter(data2, date.time < 43488)
+# NTU data -----------------------------------------------------------
 
 # Data prep -----------------------------------------------
 # Data label
-colnames(data2) <- c("date", "time", "date.time", "ntu") # columns. Can use index to change indic column
+data2 = data2 %>% dplyr::select(date.time, ntu)
+#colnames(data2) <- c("date", "time", "date.time", "ntu") # columns. Can use index to change indic column
 data2$date.time <- as.numeric(as.character(data2$date.time))
-data2$date <- as.numeric(as.character(data2$date))
-data2$time <- as.numeric(as.character(data2$time))
+#data2$date <- as.numeric(as.character(data2$date))
+#data2$time <- as.numeric(as.character(data2$time))
 data2$ntu <- as.numeric(as.character(data2$ntu))
 # data2$X455nm <- as.numeric(as.character(data2$X455nm))
 # data2$X485nm <- as.numeric(as.character(data2$X485nm))
@@ -181,23 +173,19 @@ data2$ntu <- as.numeric(as.character(data2$ntu))
 # data2$X660nm <- as.numeric(as.character(data2$X660nm))
 # data2$X695nm <- as.numeric(as.character(data2$X695nm))
 # data2$date <- as.factor(data2$date)
-str(data2)
 data2 <- data2[complete.cases(data2), ]
-head(data2)
-options(scipen = 99) # display x no of digits
 
 # Data cleaning
 data2 <- data2[order(data2$date.time), ]
-tail(data2)
-data2 <- dplyr::filter(data2, date.time > 43422) # trim away error at start. First real reading but not deployment
-data2 <- dplyr::filter(data2, date.time < 43489) # trim away error at end
+# data2 <- dplyr::filter(data2, date.time > 43422) # trim away error at start. First real reading but not deployment
+# data2 <- dplyr::filter(data2, date.time < 43489) # trim away error at end
 data2 <- dplyr::filter(data2, ntu < 500) # trim away error at end
 # data2$date
 data2$date <- factor(data2$date)
 unique(data2$date) # 66 days
 
 # remove negs
-data2.neg <- data2[which(data2[, 4] < 0), ] # all neg to 0, 16
+data2.neg <- data2[which(data2$ntu < 0), ] # all neg to 0, 16
 data2 <- data2 %>% anti_join(data2.neg) # subtracts one datafrma efrom another
 range(data2$ntu)
 
@@ -218,30 +206,44 @@ data2 <- data6
 data2$SS <- data2$ntu * 1.1
 quantile(data2$SS, probs = seq(0, 1, 0.20))
 data3 <- select(data2, c(date.time, ntu, SS))
-data1.ntu <- data3
-str(data1.ntu)
-# data1.ntu$time <- data1.ntu$date.time - floor(data1.ntu$date.time)  #extract decimal time
+data1_ntu <- data3
+str(data1_ntu)
+# data1_ntu$time <- data1_ntu$date.time - floor(data1_ntu$date.time)  #extract decimal time
 
 
 # Combine datasets --------------------------------------------------------
 
 # combine
-head(data1.ntu, 100)
-head(data1.spec, 100)
-data1.ntu$date.time <- round(data1.ntu$date.time, 2)
-data1.spec$date.time <- round(data1.spec$date.time, 2)
-str(data1.spec)
-data1.comb <- left_join(data1.ntu, data1.spec, by = "date.time") # COMBINING HERE
-data1.comb <- data1.comb[complete.cases(data1.comb), ] # remove any ntu without spec
-range(data1.comb$"425")
-# cum.ntu.fun = ecdf(data1.comb$ntu)    # P is a function giving the empirical CDF of X
+head(data1_ntu, 100)
+head(data1_spec, 100)
+data1_ntu$date.time <- round(data1_ntu$date.time, 2)
+data1_spec$date.time <- round(data1_spec$date.time, 2)
+str(data1_spec)
+data1_comb <- left_join(data1_ntu, data1_spec, by = "date.time") # COMBINING HERE
+data1_comb <- data1_comb[complete.cases(data1_comb), ] # remove any ntu without spec
+range(data1_comb$"425")
+# cum.ntu.fun = ecdf(data1_comb$ntu)    # P is a function giving the empirical CDF of X
 # cum.ntu.fun(50)  #inset ntu, return probs
-# data1.comb$ntu.perc = round(cum.ntu.fun(data1.comb$ntu), 2)  #x ntu is percentile
+# data1_comb$ntu.perc = round(cum.ntu.fun(data1_comb$ntu), 2)  #x ntu is percentile
 
 
 
-# write.table(data1.comb,'ntu and par.txt')
+#write.table(data1_comb,'2017_ntu_vs_par.txt')
+#save(data1_comb, file = file.path("./Rdata", "2017_ntu_vs_par.RData"))
+#save(data1_comb, file = file.path("./Rdata", "2018_ntu_vs_par.RData"))
 
+load("./Rdata/2017_ntu_vs_par.RData") #data1_comb
+head(data1_comb)
+data2017 = data1_comb
+data2017$deploy = '2017'
+
+load("./Rdata/2018_ntu_vs_par.RData") #data1_comb
+data2018 = data1_comb
+data2018$deploy = '2018'
+
+data1_comb = rbind(data2017, data2018)
+str(data1_comb)
+save(data1_comb, file = file.path("./underwater_light_app", "2017_18_ntu_vs_par.RData"))
 
 
 # Import wind -------------------------------------------------------------
@@ -259,10 +261,10 @@ range(data1.comb$"425")
 
 ## 1) Import data
 # setwd("C:/Users/g_ric/OneDrive/1 Work/4 Writing/1 Ricardo et al  - Modelling multiple ELHS sed scenario/field-work/field.ntu.par")
-# data1.comb <- read.table(file="https://raw.githubusercontent.com/gerard-ricardo/data/master/2018%20ntu%20and%20par", header= TRUE,dec=",", na.strings=c("",".","NA"))
-# save(data1.comb, file = file.path("./Rdata", "2018_wq_data_comb.RData"))
-load("./Rdata/2018_wq_data_comb.RData") # data1.comb
-data1 <- data1.comb
+# data1_comb <- read.table(file="https://raw.githubusercontent.com/gerard-ricardo/data/master/2018%20ntu%20and%20par", header= TRUE,dec=",", na.strings=c("",".","NA"))
+# save(data1_comb, file = file.path("./Rdata", "2018_wq_data_comb.RData"))
+load("./Rdata/2018_wq_data_comb.RData") # data1_comb
+data1 <- data1_comb
 
 # labelling
 head(data1)
@@ -330,25 +332,25 @@ range(data1$time) * 24 # hours of light
 
 
 #### plot of all predictors
-# data2 = dplyr::select(data1, c(date.time, ntu, tot.par_a, b_g, b_r))  #remove column. Make sure have package on front
+# data2 = dplyr::select(data1, c(date.time, ntu, tot_par_a, b_g, b_r))  #remove column. Make sure have package on front
 head(data1)
 nrow(data1)
 data1 <- data1[sample(nrow(data1), 1000), ]
 data1$std_wind_speed <- (data1$wind_speed - min(data1$wind_speed)) / (max(data1$wind_speed) - min(data1$wind_speed)) # standardise to 1
 data1$std_ntu <- (data1$ntu - min(data1$ntu)) / (max(data1$ntu) - min(data1$ntu)) # standardise to 1
-data1$std_tot.par_a <- (data1$tot.par_a - min(data1$tot.par_a)) / (max(data1$tot.par_a) - min(data1$tot.par_a)) # standardise to 1
+data1$std_tot_par_a <- (data1$tot_par_a - min(data1$tot_par_a)) / (max(data1$tot_par_a) - min(data1$tot_par_a)) # standardise to 1
 data1$std_b_g <- (data1$b_g - min(data1$b_g)) / (max(data1$b_g) - min(data1$b_g)) # standardise to 1
 data1$std_b_r <- (data1$b_r - min(data1$b_r)) / (max(data1$b_r) - min(data1$b_r)) # standardise to 1
-data2 <- dplyr::select(data1, c(date.time, std_ntu, std_tot.par_a, std_b_g, std_b_r, time, std_wind_speed)) # remove column. Make sure have package on front
+data2 <- dplyr::select(data1, c(date.time, std_ntu, std_tot_par_a, std_b_g, std_b_r, time, std_wind_speed)) # remove column. Make sure have package on front
 head(data2)
 plot(data2$date.time, data2$std_wind_speed)
-data1.long <- data2 %>%
+data1_long <- data2 %>%
   tidyr::pivot_longer(cols = -date.time, names_to = "predictors", values_to = "meas") %>%
   data.frame() # keep vec.x, add all other columns to factors , add all their values to meas)
-head(data1.long)
+head(data1_long)
 
 p0 <- ggplot()
-p0 <- p0 + geom_point(data = data1.long, aes(x = date.time, y = meas, group = predictors, color = predictors), alpha = 0.8, size = 1, position = position_jitter(height = 0.01, width = .01))
+p0 <- p0 + geom_point(data = data1_long, aes(x = date.time, y = meas, group = predictors, color = predictors), alpha = 0.8, size = 1, position = position_jitter(height = 0.01, width = .01))
 # p0 = p0 + geom_point(data = data2, aes(x = date.time, y = std_wind_speed), alpha = 0.8, size = 1)
 # p0 = p0 + geom_line(data = df1, aes(x =  raw_x, y = pred), color = 'grey30', linewidth=1)
 # p0 = p0 +  geom_ribbon(data = df1, aes(x = raw_x, ymin=lower, ymax=upper,fill='grey'),  alpha=0.2)
@@ -380,7 +382,7 @@ library(caret) # For confusionMatrix
 
 # distrubtions
 # plot(density(data2$std_ntu))
-# plot(density(data2$std_tot.par_a))
+# plot(density(data2$std_tot_par_a))
 # plot(density(data2$std_b_g))
 # plot(density(data2$std_b_r))
 # plot(density(data2$std_wind_speed))
@@ -630,9 +632,9 @@ head(predicted_probabilities)
 
 
 # #filter
-# data1.filt = filter(data1, ntu > 9)   #change ntu here
-# data1.filt = filter(data1.filt, ntu < 10)
-# data11 = data1.filt %>% dplyr::select(ntu, X425nm, X455nm, X485nm, X515nm, X555nm ,X615nm ,X660nm, X695nm)
+# data1_filt = filter(data1, ntu > 9)   #change ntu here
+# data1_filt = filter(data1_filt, ntu < 10)
+# data11 = data1_filt %>% dplyr::select(ntu, X425nm, X455nm, X485nm, X515nm, X555nm ,X615nm ,X660nm, X695nm)
 # data11$sum = rowSums(data11[, -1])  #sums all but first col
 # data11$std.cf = 1/data11$sum  #standaise to 1
 # data2.c = data11$std.cf*(data11[, -c(1, 10, 11)])
@@ -640,7 +642,7 @@ head(predicted_probabilities)
 # rowSums(data2.c)
 
 # plot
-data_long <- subset.dc1 %>% pivot_longer(-c(date.time, ntu, SS, time, tot.par_a), names_to = "bin", values_to = "meas")
+data_long <- subset.dc1 %>% pivot_longer(-c(date.time, ntu, SS, time, tot_par_a), names_to = "bin", values_to = "meas")
 nm <- c(425, 455, 485, 515, 555, 615, 660, 695)
 data_long$nm <- rep(nm, nrow(data_long) / length(nm))
 tail(data_long)
@@ -694,5 +696,5 @@ p0
 
 ## total par############
 
-vec <- median(data_long$tot.par_a)
+vec <- median(data_long$tot_par_a)
 names(vec) <- "Total PAR"
