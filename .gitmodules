@@ -1,0 +1,3 @@
+[submodule "underwater_light_app"]
+	path = underwater_light_app
+	url = https://github.com/gerard-ricardo/underwater-light-profile.git
