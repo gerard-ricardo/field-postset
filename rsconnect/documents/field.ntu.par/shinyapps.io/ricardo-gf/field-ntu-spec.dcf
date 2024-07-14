@@ -1,0 +1,13 @@
+name: field-ntu-spec
+title: field-ntu-spec
+username:
+account: ricardo-gf
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5340346
+bundleId: 5383951
+url: https://ricardo-gf.shinyapps.io/field-ntu-spec/
+when: 1639738336.53381
+lastSyncTime: 1639738336.53381
+asMultiple: FALSE
+asStatic: FALSE
